@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHELATE LEMON SYNC</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* スタート画面 */
+        .start-screen {
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+        .start-screen.hidden {
+            display: none;
+        }
+        .game-title {
+            font-size: 4rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+        .game-subtitle {
+            font-size: 1.2rem;
+            color: #888;
+            margin-bottom: 40px;
+            letter-spacing: 0.2em;
+        }
+        .start-instructions {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px auto;
+            max-width: 600px;
+        }
+        .instruction-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+        }
+        .dept-label {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .lab {
+            color: #00D9FF;
+        }
+        .intl {
+            color: #FF6B00;
+        }
+        .key-display {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .start-btn {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            border: none;
+            padding: 20px 60px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            color: #000;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.5);
+        }
+
+        /* ゲーム画面 */
+        .game-screen {
+            display: none;
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            position: relative;
+        }
+        .game-screen.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        /* ヘッダー */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        .timer-display {
+            font-size: 5rem;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            letter-spacing: 0.1em;
+        }
+        .timer-display.warning {
+            color: #FF4444;
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .score-display {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .score-number {
+            font-size: 3rem;
+            color: #FFD700;
+        }
+
+        /* メインゲームエリア */
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            height: calc(100% - 150px);
+        }
+
+        /* 部門パネル */
+        .dept-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        .dept-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--dept-color), transparent);
+        }
+        .dept-panel.lab {
+            --dept-color: #00D9FF;
+        }
+        .dept-panel.intl {
+            --dept-color: #FF6B00;
+        }
+        .dept-panel.perfect {
+            animation: perfectGlow 0.5s;
+        }
+        @keyframes perfectGlow {
+            0%, 100% { box-shadow: none; }
+            50% { box-shadow: 0 0 50px var(--dept-color); }
+        }
+
+        .dept-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+            letter-spacing: 0.15em;
+        }
+
+        /* メーター */
+        .meter-container {
+            position: relative;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 40px;
+            margin: 40px 0;
+            overflow: hidden;
+        }
+        .meter-track {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+        .zone {
+            flex: 1;
+            position: relative;
+        }
+        .zone.danger {
+            background: rgba(255, 0, 0, 0.1);
+        }
+        .zone.good {
+            background: rgba(255, 215, 0, 0.1);
+        }
+        .zone.perfect {
+            background: rgba(0, 255, 136, 0.2);
+            box-shadow: inset 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .indicator {
+            position: absolute;
+            width: 20px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--dept-color), transparent);
+            box-shadow: 0 0 20px var(--dept-color);
+            transition: left 0.05s linear;
+            border-radius: 10px;
+        }
+
+        /* ボタン */
+        .action-btn {
+            width: 100%;
+            padding: 25px;
+            font-size: 2rem;
+            font-weight: 900;
+            border: 3px solid var(--dept-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--dept-color);
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            transition: all 0.1s;
+            letter-spacing: 0.1em;
+            position: relative;
+            overflow: hidden;
+        }
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: var(--dept-color);
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+            opacity: 0.2;
+        }
+        .action-btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.02);
+        }
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .status-text {
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 20px 0;
+            min-height: 30px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+        }
+
+        /* 結果画面 */
+        .result-screen {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+        .result-screen.active {
+            display: block;
+        }
+        .result-title {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .final-score {
+            font-size: 6rem;
+            font-weight: 900;
+            color: #FFD700;
+            margin: 30px 0;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+        }
+        .result-message {
+            font-size: 1.5rem;
+            color: #888;
+            margin-bottom: 40px;
+            letter-spacing: 0.1em;
+        }
+        .rank {
+            display: inline-block;
+            font-size: 3rem;
+            padding: 20px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        /* フィードバック */
+        .feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: 900;
+            pointer-events: none;
+            animation: feedbackPop 0.5s ease-out;
+            z-index: 1000;
+        }
+        @keyframes feedbackPop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .game-title { font-size: 2.5rem; }
+            .timer-display { font-size: 3rem; }
+            .game-area { grid-template-columns: 1fr; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- スタート画面 -->
+    <div class="start-screen" id="startScreen">
+        <div class="game-title">CHELATE SYNC</div>
+        <div class="game-subtitle">LEMON EXPORT SYNCHRONIZATION</div>
+        <div class="start-instructions">
+            <div class="instruction-row">
+                <span class="dept-label lab">🔬 RESEARCH LAB</span>
+                <span class="key-display">SPACE</span>
+            </div>
+            <div class="instruction-row">
+                <span class="dept-label intl">🌍 INTERNATIONAL</span>
+                <span class="key-display">ENTER</span>
+            </div>
+        </div>
+        <button class="start-btn" onclick="startGame()">START MISSION</button>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div class="game-screen" id="gameScreen">
+        <div class="game-header">
+            <div class="score-display">
+                EXPORTS: <span class="score-number" id="score">0</span>
+            </div>
+            <div class="timer-display" id="timer">10</div>
+        </div>
+
+        <div class="game-area">
+            <!-- 研究所 -->
+            <div class="dept-panel lab" id="labPanel">
+                <div class="dept-title lab">🔬 RESEARCH LAB</div>
+                <div class="status-text" id="labStatus">STANDBY</div>
+                <div class="meter-container">
+                    <div class="meter-track">
+                        <div class="zone danger"></div>
+                        <div class="zone good"></div>
+                        <div class="zone perfect"></div>
+                        <div class="zone good"></div>
+                        <div class="zone danger"></div>
+                    </div>
+                    <div class="indicator" id="labIndicator" style="--dept-color: #00D9FF;"></div>
+                </div>
+                <button class="action-btn" id="labBtn" style="--dept-color: #00D9FF;">QUALITY CHECK</button>
+            </div>
+
+            <!-- 国際事業部 -->
+            <div class="dept-panel intl" id="intlPanel">
+                <div class="dept-title intl">🌍 INTERNATIONAL</div>
+                <div class="status-text" id="intlStatus">STANDBY</div>
+                <div class="meter-container">
+                    <div class="meter-track">
+                        <div class="zone danger"></div>
+                        <div class="zone good"></div>
+                        <div class="zone perfect"></div>
+                        <div class="zone good"></div>
+                        <div class="zone danger"></div>
+                    </div>
+                    <div class="indicator" id="intlIndicator" style="--dept-color: #FF6B00;"></div>
+                </div>
+                <button class="action-btn" id="intlBtn" style="--dept-color: #FF6B00;">EXPORT NOW</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 結果画面 -->
+    <div class="result-screen" id="resultScreen">
+        <div class="result-title">MISSION COMPLETE</div>
+        <div class="final-score" id="finalScore">0</div>
+        <div class="result-message">SUCCESSFUL EXPORTS</div>
+        <div class="rank" id="rank">-</div>
+        <br><br>
+        <button class="start-btn" onclick="restart()">RETRY MISSION</button>
+    </div>
+
+    <script>
+        const game = {
+            time: 10,
+            score: 0,
+            running: false,
+            lab: { position: 0, direction: 1, speed: 0.015, pressed: false },
+            intl: { position: 0, direction: 1, speed: 0.012, pressed: false }
+        };
+
+        let animationFrame;
+        let timerInterval;
+
+        // スタート
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('active');
+            
+            game.time = 10;
+            game.score = 0;
+            game.running = true;
+            game.lab = { position: 0, direction: 1, speed: 0.015, pressed: false };
+            game.intl = { position: 0, direction: 1, speed: 0.012, pressed: false };
+            
+            updateDisplay();
+            startTimer();
+            animate();
+            setupControls();
+        }
+
+        // タイマー
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                game.time--;
+                const timerEl = document.getElementById('timer');
+                timerEl.textContent = game.time;
+                
+                if (game.time <= 3) {
+                    timerEl.classList.add('warning');
+                }
+                
+                if (game.time <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // アニメーション
+        function animate() {
+            if (!game.running) return;
+
+            // 研究所のインジケーター
+            game.lab.position += game.lab.speed * game.lab.direction;
+            if (game.lab.position >= 1 || game.lab.position <= 0) {
+                game.lab.direction *= -1;
+            }
+
+            // 国際事業部のインジケーター
+            game.intl.position += game.intl.speed * game.intl.direction;
+            if (game.intl.position >= 1 || game.intl.position <= 0) {
+                game.intl.direction *= -1;
+            }
+
+            updateIndicators();
+            animationFrame = requestAnimationFrame(animate);
+        }
+
+        function updateIndicators() {
+            document.getElementById('labIndicator').style.left = (game.lab.position * 100) + '%';
+            document.getElementById('intlIndicator').style.left = (game.intl.position * 100) + '%';
+        }
+
+        // コントロール
+        function setupControls() {
+            document.addEventListener('keydown', handleKeyPress);
+            document.getElementById('labBtn').onclick = () => pressButton('lab');
+            document.getElementById('intlBtn').onclick = () => pressButton('intl');
+        }
+
+        function handleKeyPress(e) {
+            if (!game.running) return;
+            
+            if (e.code === 'Space') {
+                e.preventDefault();
+                pressButton('lab');
+            } else if (e.code === 'Enter') {
+                e.preventDefault();
+                pressButton('intl');
+            }
+        }
+
+        function pressButton(dept) {
+            if (game[dept].pressed) return;
+            
+            game[dept].pressed = true;
+            const zone = getZone(game[dept].position);
+            
+            // ステータス更新
+            const statusEl = document.getElementById(dept + 'Status');
+            if (zone === 'perfect') {
+                statusEl.textContent = '⭐ PERFECT!';
+                statusEl.style.color = '#00FF88';
+            } else if (zone === 'good') {
+                statusEl.textContent = '✓ GOOD';
+                statusEl.style.color = '#FFD700';
+            } else {
+                statusEl.textContent = '✗ MISS';
+                statusEl.style.color = '#FF4444';
+            }
+
+            // 両方押されたかチェック
+            checkSync();
+        }
+
+        function getZone(position) {
+            if (position >= 0.4 && position <= 0.6) return 'perfect';
+            if (position >= 0.2 && position <= 0.8) return 'good';
+            return 'danger';
+        }
+
+        function checkSync() {
+            if (!game.lab.pressed || !game.intl.pressed) return;
+
+            const labZone = getZone(game.lab.position);
+            const intlZone = getZone(game.intl.position);
+
+            let success = false;
+            let feedback = '';
+
+            // 両方 PERFECT
+            if (labZone === 'perfect' && intlZone === 'perfect') {
+                game.score += 3;
+                feedback = '🌟 PERFECT SYNC! +3';
+                document.getElementById('labPanel').classList.add('perfect');
+                document.getElementById('intlPanel').classList.add('perfect');
+                setTimeout(() => {
+                    document.getElementById('labPanel').classList.remove('perfect');
+                    document.getElementById('intlPanel').classList.remove('perfect');
+                }, 500);
+            }
+            // どちらかPERFECT、もう片方GOOD
+            else if ((labZone === 'perfect' || intlZone === 'perfect') && 
+                     (labZone === 'good' || intlZone === 'good')) {
+                game.score += 2;
+                feedback = '✨ GREAT! +2';
+            }
+            // 両方GOOD
+            else if (labZone === 'good' && intlZone === 'good') {
+                game.score += 1;
+                feedback = '✓ SUCCESS +1';
+            }
+            // 失敗
+            else {
+                feedback = '✗ FAILED';
+            }
+
+            showFeedback(feedback);
+            updateDisplay();
+
+            // リセット
+            setTimeout(() => {
+                game.lab.pressed = false;
+                game.intl.pressed = false;
+                document.getElementById('labStatus').textContent = 'STANDBY';
+                document.getElementById('intlStatus').textContent = 'STANDBY';
+                document.getElementById('labStatus').style.color = '';
+                document.getElementById('intlStatus').style.color = '';
+            }, 800);
+        }
+
+        function showFeedback(text) {
+            const feedback = document.createElement('div');
+            feedback.className = 'feedback';
+            feedback.textContent = text;
+            
+            if (text.includes('PERFECT')) {
+                feedback.style.color = '#00FF88';
+            } else if (text.includes('GREAT') || text.includes('SUCCESS')) {
+                feedback.style.color = '#FFD700';
+            } else {
+                feedback.style.color = '#FF4444';
+            }
+            
+            document.getElementById('gameScreen').appendChild(feedback);
+            setTimeout(() => feedback.remove(), 500);
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = game.score;
+        }
+
+        // ゲーム終了
+        function endGame() {
+            game.running = false;
+            clearInterval(timerInterval);
+            cancelAnimationFrame(animationFrame);
+            document.removeEventListener('keydown', handleKeyPress);
+
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+            document.getElementById('finalScore').textContent = game.score;
+
+            // ランク判定
+            let rank = '';
+            if (game.score >= 20) rank = 'S RANK - LEGENDARY';
+            else if (game.score >= 15) rank = 'A RANK - EXCELLENT';
+            else if (game.score >= 10) rank = 'B RANK - GOOD';
+            else if (game.score >= 5) rank = 'C RANK - AVERAGE';
+            else rank = 'D RANK - TRAINING NEEDED';
+
+            document.getElementById('rank').textContent = rank;
+        }
+
+        function restart() {
+            document.getElementById('resultScreen').classList.remove('active');
+            document.getElementById('startScreen').classList.remove('hidden');
+            document.getElementById('timer').classList.remove('warning');
+        }
+    </script>
+</body>
+</html>
